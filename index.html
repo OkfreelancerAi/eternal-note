@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eternal Note — Permanent notes that earn • by @okfreelancer</title>
+  <script src="https://unpkg.com/arweave@1.15.7/bundles/web.bundle.min.js"></script>
+  <style>
+    :root {
+      --bg: #07070c;
+      --card: #111118;
+      --accent: #00ff9d;
+      --accent-dim: #00cc7a;
+      --text: #eef0f5;
+      --muted: #8b8fa3;
+      --error: #ff5c5c;
+      --gold: #ffd60a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background-image:
+        radial-gradient(ellipse at 15% 15%, rgba(0,255,157,0.09) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 85%, rgba(0,140,255,0.07) 0%, transparent 45%);
+    }
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid #252530;
+      border-radius: 18px;
+      padding: 2.2rem;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.65), 0 0 50px rgba(0,255,157,0.06);
+    }
+    h1 {
+      font-size: 1.85rem;
+      line-height: 1.2;
+      margin-bottom: 0.45rem;
+      background: linear-gradient(100deg, var(--accent), #00c8ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.4rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.32rem 0.75rem;
+      border-radius: 999px;
+    }
+    .badge-owner {
+      background: rgba(0,255,157,0.09);
+      border: 1px solid rgba(0,255,157,0.28);
+      color: var(--accent);
+    }
+    .badge-earn {
+      background: rgba(255,214,10,0.1);
+      border: 1px solid rgba(255,214,10,0.35);
+      color: var(--gold);
+    }
+    .value-props {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+      margin-bottom: 1.4rem;
+    }
+    @media (max-width: 560px) {
+      .value-props { grid-template-columns: 1fr; }
+    }
+    .prop {
+      background: #0c0c12;
+      border: 1px solid #252530;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+    .prop strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+    .code-preview {
+      background: #0a0a10;
+      border: 1px solid #252530;
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.73rem;
+      color: var(--accent);
+      margin-bottom: 1.3rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s, transform 0.15s, opacity 0.15s;
+    }
+    button:hover:not(:disabled) {
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #status {
+      margin: 1rem 0;
+      padding: 0.75rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      min-height: 1.2rem;
+      line-height: 1.4;
+    }
+    .success { background: rgba(0,255,157,0.1); border: 1px solid var(--accent); color: var(--accent); }
+    .error   { background: rgba(255,92,92,0.1); border: 1px solid var(--error); color: #ff8a8a; }
+    .info    { background: rgba(0,180,255,0.08); border: 1px solid #0088cc; color: #6ecbff; }
+    #composer { margin-top: 0.4rem; }
+    .address-row {
+      font-size: 0.86rem;
+      margin-bottom: 0.7rem;
+      word-break: break-all;
+    }
+    .address {
+      font-family: ui-monospace, monospace;
+      font-size: 0.8rem;
+      color: #aab;
+    }
+    .earn-box {
+      background: rgba(255,214,10,0.07);
+      border: 1px solid rgba(255,214,10,0.22);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      margin: 0.7rem 0 1.1rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #e8d48b;
+    }
+    .earn-box strong { color: var(--gold); }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      background: #0a0a10;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: var(--text);
+      padding: 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      margin: 0.5rem 0 1.1rem;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    .result {
+      margin-top: 1.3rem;
+      padding: 1.1rem;
+      background: #0a0a10;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      margin-top: 1.8rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Eternal Note</h1>
+    <p class="subtitle">
+      Permanent notes on Arweave that can earn you money.<br>
+      One click to post. Tips & agent payments go straight to your wallet.
+    </p>
+
+    <div class="badges">
+      <span class="badge badge-owner">🔒 Owned by @okfreelancer</span>
+      <span class="badge badge-earn">💰 Agentic Earnings • x402 ready</span>
+    </div>
+
+    <div class="value-props">
+      <div class="prop">
+        <strong>Permanent</strong>
+        Stored forever on Arweave. No servers to maintain. No link rot.
+      </div>
+      <div class="prop">
+        <strong>Earn directly</strong>
+        Tips and AI agent payments go to your connected wallet. You withdraw anytime.
+      </div>
+      <div class="prop">
+        <strong>Agent ready</strong>
+        Notes are tagged x402-ready so autonomous agents can discover and tip them.
+      </div>
+      <div class="prop">
+        <strong>Zero middleman</strong>
+        No platform fees on tips. Your wallet, your money.
+      </div>
+    </div>
+
+    <div class="code-preview">await window.arweaveWallet.connect(
+  ["ACCESS_ADDRESS", "SIGN_TRANSACTION", "DISPATCH"],
+  { name: "Eternal Note by @okfreelancer" }
+)</div>
+
+    <button id="connectBtn">Connect Creator Wallet</button>
+    <div id="status"></div>
+
+    <div id="composer" hidden>
+      <div class="address-row">
+        Your creator wallet (receives all tips):<br>
+        <span class="address" id="addr"></span>
+      </div>
+
+      <div class="earn-box">
+        <strong>How you make money</strong><br>
+        Every note you post becomes a permanent tippable page.<br>
+        Readers and AI agents can send AR directly to the address above.<br>
+        Withdraw from Wander / ArConnect whenever you want. No extra steps.
+      </div>
+
+      <textarea id="message" placeholder="Write a note, idea, manifesto, or message worth preserving and tipping..." maxlength="50000"></textarea>
+      <button id="postBtn">Post Eternal Note & Enable Earnings</button>
+    </div>
+
+    <div id="result" class="result" hidden></div>
+
+    <footer>
+      Built for creators who want permanence + direct revenue.<br>
+      Requires Wander or ArConnect wallet.<br>
+      <strong style="color:var(--accent)">@okfreelancer</strong> · Ownership locked · Tips → your wallet
+    </footer>
+  </div>
+
+  <script>
+    const arweave = Arweave.init({
+      host: 'arweave.net',
+      port: 443,
+      protocol: 'https'
+    });
+
+    const $ = id => document.getElementById(id);
+    const statusEl   = $('status');
+    const connectBtn = $('connectBtn');
+    const composer   = $('composer');
+    const postBtn    = $('postBtn');
+    const messageEl  = $('message');
+    const resultEl   = $('result');
+    const addrEl     = $('addr');
+
+    let creatorAddress = null;
+
+    function setStatus(msg, type = 'info') {
+      statusEl.className = type;
+      statusEl.textContent = msg;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    if (!window.arweaveWallet) {
+      setStatus('No Arweave wallet detected. Install Wander or ArConnect, then refresh.', 'error');
+      connectBtn.disabled = true;
+    }
+
+    connectBtn.addEventListener('click', async () => {
+      if (!window.arweaveWallet) {
+        setStatus('No wallet found. Install Wander / ArConnect first.', 'error');
+        return;
+      }
+
+      try {
+        setStatus('Connecting your creator wallet…', 'info');
+        connectBtn.disabled = true;
+
+        await window.arweaveWallet.connect(
+          ['ACCESS_ADDRESS', 'SIGN_TRANSACTION', 'DISPATCH'],
+          {
+            name: 'Eternal Note by @okfreelancer',
+            logo: 'https://arweave.net/azW8iYR5A6bPXyS6WpMmw-qLTXNleS-vv4LJDR9Hf-s'
+          }
+        );
+
+        creatorAddress = await window.arweaveWallet.getActiveAddress();
+        addrEl.textContent = creatorAddress;
+        composer.hidden = false;
+        setStatus('Creator wallet connected. All tips will go here.', 'success');
+      } catch (err) {
+        connectBtn.disabled = false;
+        const msg = err?.message || String(err);
+        setStatus(
+          msg.includes('User rejected') || msg.includes('denied')
+            ? 'Connection cancelled.'
+            : 'Connection failed: ' + msg,
+          'error'
+        );
+      }
+    });
+
+    postBtn.addEventListener('click', async () => {
+      const text = messageEl.value.trim();
+      if (!text) {
+        setStatus('Write something first.', 'error');
+        messageEl.focus();
+        return;
+      }
+      if (!creatorAddress) {
+        setStatus('Connect your creator wallet first.', 'error');
+        return;
+      }
+
+      postBtn.disabled = true;
+      setStatus('Publishing tippable eternal note…', 'info');
+      resultEl.hidden = true;
+
+      try {
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eternal Note — Tip the Creator</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+         background:#07070c;color:#eef0f5;font-family:system-ui,sans-serif;padding:1.5rem}
+    .note{max-width:640px;width:100%;padding:2.2rem;text-align:center}
+    h1{color:#00ff9d;font-size:1.55rem;margin-bottom:1rem}
+    .content{font-size:1.25rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;margin:1.3rem 0}
+    .meta{color:#8b8fa3;font-size:0.85rem;margin-top:1.2rem}
+    .tip-box{
+      margin-top:2rem;padding:1.3rem;border-radius:14px;text-align:left;
+      background:rgba(255,214,10,0.07);border:1px solid rgba(255,214,10,0.28);
+    }
+    .tip-box h3{color:#ffd60a;font-size:1.05rem;margin-bottom:0.55rem}
+    .tip-box .addr{
+      font-family:ui-monospace,monospace;font-size:0.82rem;word-break:break-all;
+      background:#0e0e14;padding:0.7rem 0.85rem;border-radius:8px;margin:0.6rem 0;color:#ccc;
+    }
+    .tip-box .hint{font-size:0.82rem;color:#aaa;line-height:1.45}
+    .owner{
+      display:inline-block;margin-top:1.6rem;padding:0.35rem 0.85rem;border-radius:999px;
+      background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.28);
+      color:#00ff9d;font-size:0.8rem;font-weight:600;
+    }
+  </style>
+</head>
+<body>
+  <div class="note">
+    <h1>✨ Eternal Note</h1>
+    <div class="content">${escapeHtml(text)}</div>
+    <div class="meta">Permanently stored on Arweave</div>
+
+    <div class="tip-box">
+      <h3>💰 Tip the Creator</h3>
+      <div>Send AR or tips directly to this wallet:</div>
+      <div class="addr">${creatorAddress}</div>
+      <div class="hint">
+        AI agents (x402) and humans can pay this address.<br>
+        Creator withdraws anytime from their Arweave wallet. No middleman.
+      </div>
+    </div>
+
+    <div class="owner">App by @okfreelancer</div>
+  </div>
+</body>
+</html>`;
+
+        const tx = await arweave.createTransaction({ data: html });
+        tx.addTag('Content-Type', 'text/html');
+        tx.addTag('App-Name', 'EternalNote');
+        tx.addTag('App-Owner', 'okfreelancer');
+        tx.addTag('Owner', '@okfreelancer');
+        tx.addTag('Creator', creatorAddress);
+        tx.addTag('Payment-Address', creatorAddress);
+        tx.addTag('x402-Ready', 'true');
+        tx.addTag('Tipping-Enabled', 'true');
+        tx.addTag('Title', 'Eternal Note');
+        tx.addTag('Type', 'note');
+
+        const res = await window.arweaveWallet.dispatch(tx);
+        const url = `https://arweave.net/${res.id}`;
+
+        resultEl.hidden = false;
+        resultEl.innerHTML = `
+          <strong>Your note is live and earning-ready.</strong><br><br>
+          Link: <a href="${url}" target="_blank" rel="noopener">${url}</a><br>
+          Revenue wallet: <code style="font-size:0.8rem;word-break:break-all">${creatorAddress}</code><br><br>
+          Share the link. Tips and agent payments go straight to your wallet.<br>
+          Withdraw inside Wander / ArConnect anytime.<br><br>
+          <a href="${url}" target="_blank" rel="noopener">Open your eternal note →</a>
+        `;
+        setStatus('Published. Tips now flow to your creator wallet.', 'success');
+        messageEl.value = '';
+      } catch (err) {
+        setStatus('Failed: ' + (err?.message || err), 'error');
+        console.error(err);
+      } finally {
+        postBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

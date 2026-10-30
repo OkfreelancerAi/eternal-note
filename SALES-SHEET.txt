@@ -1,0 +1,26 @@
+ETERNAL NOTE
+Permanent notes that earn — by @okfreelancer
+
+WHAT IT IS
+A single-file dApp that lets anyone publish a permanent note on Arweave.
+Every note is tippable. Tips and AI-agent payments (x402-ready) go directly to the creator’s wallet.
+
+WHY IT SELLS
+• Permanent storage (Arweave) — no servers, no link rot
+• Direct earnings — no middleman, no platform cut on tips
+• Agentic ready — notes tagged for x402 / AI agent discovery
+• One-click publish with Wander / ArConnect
+• Ownership locked to @okfreelancer branding
+
+HOW CREATORS MAKE MONEY
+1. Connect their Arweave wallet
+2. Write & post a note
+3. Share the permanent link
+4. Receive tips / agent payments straight to their wallet
+5. Withdraw anytime inside Wander or ArConnect
+
+POSITIONING
+“Post once. Live forever. Get tipped by humans and AI agents.”
+
+TARGET
+Independent creators, AI agent developers, Permaweb builders.
